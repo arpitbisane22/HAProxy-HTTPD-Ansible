@@ -1,0 +1,11 @@
+- hosts: localhost
+  roles:
+  - role: aws
+  
+- hosts: webserver
+  roles: 
+  - role: webserver 
+  
+- hosts: lb
+  roles:
+  - role: lb    
