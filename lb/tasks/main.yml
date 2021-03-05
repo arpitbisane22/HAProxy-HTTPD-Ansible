@@ -1,0 +1,16 @@
+- name: "Installing HAproxy software"
+  package:
+          name: "haproxy"
+          state: present
+
+- name: "Configuring HAproxy software"
+  template:
+          src: "haproxy.cfg"
+          dest: "/etc/haproxy/haproxy.cfg"
+
+- name: "starting the haproxy services"
+  service:
+          name: "haproxy"
+          state: restarted
+
+# tasks file for lb
