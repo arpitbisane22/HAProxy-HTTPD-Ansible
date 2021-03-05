@@ -1,0 +1,69 @@
+- name: "Launching LoadBalancer"
+  ec2:
+       key_name: "arpit_aws"
+       instance_type: "t2.micro"
+       image: "ami-08e0ca9924195beba"
+       wait: yes
+       count: 1
+       instance_tags:
+         Name: "LoadBalancer"
+       vpc_subnet_id : "subnet-fc3f3694"
+       assign_public_ip: yes
+       state: present
+       region: "ap-south-1"
+       group_id: "sg-02f5ee0fc6b3ea0b6"
+       aws_access_key: "{{ access_key }}"
+       aws_secret_key: "{{ secret_key }}"
+  register: loadbalancer
+
+- debug: 
+       msg: "Successfully launched LoadBalancer"  
+
+- name: "Adding LoadBalancer in a host group"
+  add_host:
+       hostname: "{{ item.public_ip }}"
+       groups: lb
+  loop: "{{ loadbalancer['instances'] }}"
+
+- name: "Waiting for SSH"
+  wait_for:
+       host: "{{ item.public_dns_name }}"
+       port: 22
+       state: started
+  loop: "{{ loadbalancer['instances'] }}"
+
+
+- name: "Launching AWS instances for WebServers"
+  ec2:
+       key_name: "arpit_aws"
+       instance_type: "t2.micro"
+       image: "ami-08e0ca9924195beba"
+       wait: yes
+       count: 2
+       instance_tags:
+              Name: "WebServers"
+       vpc_subnet_id : "subnet-fc3f3694"
+       assign_public_ip: yes
+       state: present
+       region: "ap-south-1"
+       group_id: "sg-02f5ee0fc6b3ea0b6"
+       aws_access_key: "{{ access_key }}"
+       aws_secret_key: "{{ secret_key }}"
+  register: ws
+
+- debug:
+       msg: "Successfully launched WebServers"
+
+
+- name: "Adding worker in a host group"
+  add_host:
+       hostname: "{{ item.public_ip }}"
+       groups: webserver
+  loop: "{{ ws['instances'] }}"
+
+- name: "Waiting for SSH"
+  wait_for:
+       host: "{{ item.public_dns_name }}"
+       port: 22
+       state: started
+  loop: "{{ ws['instances'] }}"  
